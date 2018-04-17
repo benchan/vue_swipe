@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title></title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.13/dist/vue.js"></script>
+    <link rel="stylesheet" href="./style.css" />
+    <style>
+/**
+ * vue component
+ */
+.release {
+    left: 0 !important;
+    -webkit-transition-property: left;
+    -webkit-transition-duration: 0.3s;
+    -webkit-transition-timing-function: ease-in-out;
+    transition-property: left;
+    transition-duration: 0.3s;
+    transition-timing-function: ease-in-out;
+}
+.fadeout_right {
+    left: 100% !important;
+    -webkit-transition-property: left;
+    -webkit-transition-duration: 0.2s;
+    -webkit-transition-timing-function: ease-in-out;
+    transition-property: left;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-in-out;
+}
+.fadeout_left {
+    left: -100% !important;
+    -webkit-transition-property: left;
+    -webkit-transition-duration: 0.2s;
+    -webkit-transition-timing-function: ease-in-out;
+    transition-property: left;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-in-out;
+}
+    </style>
+</head>
+<body>
+    <div id="wrap">
+        <box-container></box-container>
+        <box-container></box-container>
+        <box-container></box-container>
+    </div>
+
+    <script>
+        Vue.component('box-container', {
+            template: '<div class="outer_box" v-if="show" v-bind:style="outerStyle">\
+                <div class="box" v-bind:class="{release:release, fadeout_right:fadeout_right, fadeout_left:fadeout_left}"\
+                v-on:touchstart="start"\
+                v-on:touchmove="move"\
+                v-on:touchend="end"\
+                v-on:touchend="end"\
+                v-on:mousedown="start"\
+                v-on:mousemove="move"\
+                v-on:mouseup="end"\
+                v-on:mouseleave="end"\
+                v-bind:style="boxStyle"\
+            >{{ text }}</div></div>',
+            methods: {
+                getPageX: function(e){
+                    // smart,pc event判断
+                    this.isTouch = ('ontouchstart' in window);
+                    // event.pageX = cursor pos
+                    return (this.isTouch ? event.changedTouches[0].pageX : e.pageX)
+                },
+                start: function (e) {
+                    this.pageX = this.getPageX(e)
+                    this.touched = true
+
+                    _self = this
+                    this.$el.addEventListener("transitionend", function(){
+                        _self.release = false
+
+                        if(_self.fadeout_right || _self.fadeout_left){
+                            _self.show = false
+                        }
+                    }, false);
+
+                },
+                move: function (e){
+
+                    if(!this.touched) return
+                    e.preventDefault()
+
+                    // 移動要素のleftに入れる値
+                    this.leftSize = this.leftSize - (this.pageX - this.getPageX(e) )
+                    this.boxStyle.left = this.leftSize + 'px'
+
+                    // 画面の左端からの座標
+                    this.pageX = this.getPageX(e)
+
+
+                    if (this.leftSize > (this.$el.clientWidth*0.8)){
+                        this.outerStyle["background-color"] = "green"
+
+                    } else if (this.leftSize < -(this.$el.clientWidth*0.8)){
+                        this.outerStyle["background-color"] = "red"
+
+                    } else {
+                        this.outerStyle["background-color"] = "#ddd"
+
+                    }
+
+                },
+                end: function (e){
+                    if(!this.touched) return
+                    e.preventDefault()
+
+                    this.touched = false;
+
+                    // 8割超えたら何かする
+                    if (this.leftSize > (this.$el.clientWidth*0.8)){
+                        this.fadeout_right = true
+
+                    } else if (this.leftSize < -(this.$el.clientWidth*0.8)){
+                        this.fadeout_left = true
+
+                    } else {
+                        this.leftSize = 0
+                        this.boxStyle.left = 0
+                        this.release = true
+                    }
+                }
+            },
+            data: function () {
+                return {
+                    outerStyle: {
+                        "background-color": "#ddd"
+                    },
+                    boxStyle: {
+                        left: 0
+                    },
+                    release: false,
+                    fadeout_right: false,
+                    fadeout_left: false,
+                    isTouch: false,
+                    touched: false,
+                    pageX: 0,
+                    leftSize: 0,
+                    text: 'comment',
+                    show: true
+                }
+            }
+        })
+
+        _data = new Vue({
+            el: '#wrap'
+        })
+    </script>
+</body>
+</html>
